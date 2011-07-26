@@ -27,6 +27,11 @@ class Container
      * @var string Default ORM EntityManager name.
      */
     public $defaultEntityManager = 'default';
+    
+    /**
+     * @var string Default Annotation reader  name.
+     */
+    public $defaultAnnotationReader = 'default';
 
     /**
      * @var array Doctrine Context configuration.
@@ -47,6 +52,11 @@ class Container
      * @var array Available ORM EntityManagers.
      */
     private $entityManagers = array();
+    
+    /**
+     * @var array Available AnnotationReaders.
+     */
+    private $annotationReaders = array();
 
     
     /**
@@ -354,6 +364,28 @@ class Container
         
         return $this->entityManagers[$emName];
     }
+    
+    /**
+     * Retrieve AnnotationReader based on its name. If no argument provided,
+     * it will attempt to get the default AnnotationReader.
+     * If AnnotationReader name could not be found, NameNotFoundException is thrown.
+     *
+     * @throws Bisna\Application\Exception\NameNotFoundException
+     *
+     * @param string $arName Optional AnnotationReader name
+     *
+     * @return Doctrine\Common\Annotations\AnnotationReader AnnotationReader
+     */
+    public function getAnnotationReader($arName = null)
+    {
+        $arName = $arName ?: $this->defaultAnnotationReader;
+        // Check if AnnotationReader has not yet been initialized
+        if ( ! isset($this->annotationReaders[$arName])) {
+        	throw new Exception\NameNotFoundException("Unable to find Doctrine AnnotationReader '{$arName}'.");
+        }
+        
+        return $this->annotationReaders[$arName];
+    }
 
     /**
      * Initialize the DBAL Connection.
@@ -568,7 +600,7 @@ class Container
         // Setup AnnotationRegistry
         $this->startAnnotationRegistry($config['annotationRegistry']);
         
-        foreach ($config['drivers'] as $driver) {
+        foreach ($config['drivers'] as $key => $driver) {
             $driver = array_replace_recursive($defaultMetadataDriver, $driver);
             
             $reflClass = new \ReflectionClass($driver['adapterClass']);
@@ -587,7 +619,8 @@ class Container
                 }
 
                 //$annotationReader->setIgnoreNotImportedAnnotations(false);
-				
+				$this->annotationReaders[$key] = $annotationReader;
+				 
                 $indexedReader = new \Doctrine\Common\Annotations\CachedReader(
                     new \Doctrine\Common\Annotations\IndexedReader($annotationReader), 
                     $this->getCacheInstance($driver['annotationReaderCache'])

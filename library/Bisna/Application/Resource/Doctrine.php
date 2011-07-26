@@ -11,21 +11,32 @@ use Bisna\Doctrine\Container as DoctrineContainer;
  */
 class Doctrine extends \Zend_Application_Resource_ResourceAbstract
 {
+	protected $doctrineContainer;
+	
     /**
-     * Initializes Doctrine Context.
+     * Initializes Doctrine Resource.
      *
      * @return Bisna\Doctrine\Container
      */
     public function init()
     {
-        $config = $this->getOptions();
+        return $this->getDoctrineContainer();
+    }
+    
+    /**
+     * Get Doctrine Container
+     *
+     * @return Bisna\Doctrine\Container
+     */
+    public function getDoctrineContainer()
+    {
+    	if (is_null($this->doctrineContainer)) {
+    		$config = $this->getOptions();
         
-        // Starting Doctrine container
-        $container = new DoctrineContainer($config);
-
-        // Add to Zend Registry
-        \Zend_Registry::set('doctrine', $container);
-
-        return $container;
+	        // Starting Doctrine container
+	        $this->doctrineContainer = new DoctrineContainer($config);
+    	}
+    	
+    	return $this->doctrineContainer;
     }
 }
